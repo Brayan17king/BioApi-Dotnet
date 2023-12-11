@@ -1423,13 +1423,13 @@ public class CiudadConfiguration : IEntityTypeConfiguration<Ciudad>
 ```csharp
 namespace Persistence.Data;
 
-public partial class JardineriaContext : DbContext
+public partial class BackEndContext: DbContext
 {
     public JardineriaContext()
     {
     }
 
-    public JardineriaContext(DbContextOptions<JardineriaContext> options) : base(options)
+    public JardineriaContext(DbContextOptions<BackEndContext> options) : base(options)
     {
 
     public virtual DbSet<Pago> Pagos { get; set; }
@@ -1446,26 +1446,43 @@ public partial class JardineriaContext : DbContext
 ### Consultas
 
 ```csharp
-namespace Persistence.Data;
+public async Task<List<Persona>> ObtenerTodosEmpleadosAsync()
+        {
+            return await _context.Personas
+                .Where(p => p.TipoPersonas.Descripcion == "Empleado")
+                .ToListAsync();
+        }
 
-public partial class JardineriaContext : DbContext
-{
-    public JardineriaContext()
-    {
-    }
+        public async Task<List<Persona>> ObtenerVigilantesAsync()
+        {
+            return await _context.Personas
+                .Where(p => p.TipoPersonas.Descripcion == "Empleado" && p.CategoriaPersonas.NombreCategoria == "Vigilante")
+                .ToListAsync();
+        }
 
-    public JardineriaContext(DbContextOptions<JardineriaContext> options) : base(options)
-    {
+        public async Task<List<Persona>> ObtenerClientesPorCiudadAsync(string nombreCiudad)
+        {
+            return await _context.Personas
+                .Where(p => p.TipoPersonas.Descripcion == "Clientes" && p.Ciudades.NombreCiudad == "Bucaramanga")
+                .ToListAsync();
+        }
 
-    public virtual DbSet<Pago> Pagos { get; set; }
-    ...
+        public async Task<List<Persona>> ObtenerEmpleadosPorCiudadesAsync(List<string> nombresCiudades)
+        {
+            return await _context.Personas
+                .Where(p => p.TipoPersonas.Descripcion == "Empleado" && nombresCiudades.Contains(p.Ciudades.NombreCiudad, StringComparer.OrdinalIgnoreCase))
+                .ToListAsync();
+        }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-    }
-}
+        public async Task<List<Persona>> ObtenerClientesConAntiguedadMayorA5AniosAsync()
+        {
+            var fechaLimite = DateOnly.FromDateTime(DateTime.Now.AddYears(-5));
+
+            return await _context.Personas
+                .Where(p => p.TipoPersonas.Descripcion == "Cliente" &&
+                            (DateOnly)p.DateReg < fechaLimite)
+                .ToListAsync();
+        }
 ```
 
 ### 
